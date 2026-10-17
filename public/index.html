@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Portal | Secure MiniMoth OTP Gateway</title>
+  <meta name="description" content="Secure OTP generator and authentication system for university student portal powered by MiniMoth Live API.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient Animated Mesh Blobs -->
+  <div class="bg-mesh">
+    <div class="mesh-blob blob-1"></div>
+    <div class="mesh-blob blob-2"></div>
+    <div class="mesh-blob blob-3"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="portal-header">
+    <div class="header-container">
+      <div class="brand-wrapper">
+        <div class="brand-icon">🎓</div>
+        <div>
+          <span class="brand-title">CampusNet Student Portal</span>
+          <span class="brand-badge">2FA SECURE</span>
+        </div>
+      </div>
+      <div class="header-meta">
+        <div class="api-pill" id="apiPill">
+          <span class="pulse-dot"></span>
+          <span id="apiStatusText">MiniMoth Live API: Active</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View -->
+  <main class="portal-main">
+    <div class="app-wrapper">
+
+      <!-- Authentication Section (Login & OTP) -->
+      <section id="authSection" class="auth-grid">
+
+        <!-- Left Form: Step 1 & Step 2 -->
+        <div class="glass-card">
+          <div class="card-heading">
+            <h2 id="formHeading">Student Authentication</h2>
+            <p id="formSubheading">Sign in with your registered phone number or university roll number to receive a secure OTP.</p>
+          </div>
+
+          <!-- Step 1: Input Phone / Student Preset -->
+          <div id="stepRequestOtp">
+            <div class="preset-section">
+              <div class="section-label">
+                <span>Quick Select Demo Student</span>
+                <span>or enter below</span>
+              </div>
+              <div class="preset-students" id="presetStudentsList">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+
+            <form id="phoneForm" onsubmit="handleSendOtp(event)">
+              <div class="form-group">
+                <label class="form-label" for="phoneInput">Mobile Phone (WhatsApp / SMS Delivery)</label>
+                <div class="input-with-addon">
+                  <span class="input-addon">🇮🇳</span>
+                  <input 
+                    type="tel" 
+                    id="phoneInput" 
+                    class="form-input input-padded" 
+                    placeholder="+91 98765 43210"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="studentIdInput">Student Roll Number (Optional)</label>
+                <input 
+                  type="text" 
+                  id="studentIdInput" 
+                  class="form-input" 
+                  placeholder="e.g. STU202601"
+                />
+              </div>
+
+              <button type="submit" id="btnSendOtp" class="btn-primary">
+                <span id="btnSendText">Generate & Dispatch OTP</span>
+                <span id="btnSendSpinner" class="spinner" style="display: none;"></span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Step 2: Enter OTP Code -->
+          <div id="stepVerifyOtp" style="display: none;">
+            <div style="margin-bottom: 18px;">
+              <span style="font-size: 0.85rem; color: var(--text-muted);">Code dispatched to: </span>
+              <strong id="displayTargetPhone" style="color: #38bdf8; font-family: 'Space Grotesk', monospace;"></strong>
+              <button class="btn-secondary" style="margin-left: 10px; padding: 4px 10px;" onclick="switchStep('stepRequestOtp')">Change</button>
+            </div>
+
+            <form id="verifyForm" onsubmit="handleVerifyOtp(event)">
+              <label class="form-label">Enter 6-Digit One-Time Password</label>
+              
+              <div class="otp-digit-grid" id="otpBoxGrid">
+                <input type="text" maxlength="1" class="otp-box" data-index="0" autofocus />
+                <input type="text" maxlength="1" class="otp-box" data-index="1" />
+                <input type="text" maxlength="1" class="otp-box" data-index="2" />
+                <input type="text" maxlength="1" class="otp-box" data-index="3" />
+                <input type="text" maxlength="1" class="otp-box" data-index="4" />
+                <input type="text" maxlength="1" class="otp-box" data-index="5" />
+              </div>
+
+              <div class="otp-footer">
+                <span>Expires in: <strong id="timerText" style="color: #f59e0b;">05:00</strong></span>
+                <button type="button" id="btnResend" class="resend-link" onclick="handleResendOtp()" disabled>Resend Code</button>
+              </div>
+
+              <button type="submit" id="btnVerifyOtp" class="btn-primary">
+                <span id="btnVerifyText">Verify OTP & Open Student Portal</span>
+                <span id="btnVerifySpinner" class="spinner" style="display: none;"></span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Right Monitor: Live MiniMoth Gateway Telemetry -->
+        <div class="live-api-monitor">
+          <div class="gateway-status-card">
+            <div class="gateway-header">
+              <div class="gateway-title">
+                <span>⚡ Gateway Telemetry</span>
+                <span class="live-badge">LIVE API</span>
+              </div>
+              <span id="gatewayPing" style="font-size: 0.75rem; color: #34d399;">● Online</span>
+            </div>
+
+            <div class="api-key-box">
+              <div style="font-size: 0.7rem; color: var(--text-subtle); margin-bottom: 4px;">ACTIVE MINIMOTH API KEY:</div>
+              <span id="apiKeyDisplay">mm_live_58718e0388b7...11987d00d</span>
+            </div>
+
+            <!-- OTP Instant Preview Display Card -->
+            <div id="liveOtpCard" class="otp-live-display" style="display: none;">
+              <div class="otp-live-title">📱 Live Generated OTP Code</div>
+              <div id="liveOtpDigits" class="otp-live-digits">------</div>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 6px;">
+                Dispatched to MiniMoth Live API. You can also paste directly into verification.
+              </p>
+              <button class="otp-copy-btn" onclick="autoFillOtp()">⚡ Auto-fill Into OTP Boxes</button>
+            </div>
+
+            <div style="margin-top: 18px;">
+              <div class="terminal-title">
+                <span>SERVER & API CONSOLE LOGS</span>
+                <span id="clearLogsBtn" style="cursor: pointer; color: var(--accent-primary);" onclick="clearLogs()">Clear</span>
+              </div>
+              <div class="api-terminal" id="terminalLogs">
+                <div class="terminal-line line-info">[System] MiniMoth OTP Gateway client initialized.</div>
+                <div class="terminal-line line-info">[Config] Key authenticated: mm_live_5871...d00d</div>
+                <div class="terminal-line line-info">[Ready] Waiting for OTP dispatch trigger...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Student Dashboard Section (Shown post-login) -->
+      <section id="portalDashboard" class="portal-dashboard">
+        
+        <!-- Top Profile Bar -->
+        <div class="dash-topbar">
+          <div class="dash-student-profile">
+            <img id="dashAvatar" class="dash-avatar" src="" alt="Student Profile" />
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <h3 id="dashName" class="dash-name">Aarav Sharma</h3>
+                <span class="brand-badge" style="background: rgba(99, 102, 241, 0.2); border-color: rgba(99, 102, 241, 0.4); color: #a5b4fc;">VERIFIED STUDENT</span>
+              </div>
+              <div class="dash-detail">
+                <span id="dashRoll">STU202601</span> • <span id="dashProgram">B.Tech Computer Science & AI</span> • <span id="dashSem">6th Semester</span>
+              </div>
+            </div>
+          </div>
+          <div class="dash-actions">
+            <button class="btn-secondary" onclick="handleLogout()">🔒 Secure Logout</button>
+          </div>
+        </div>
+
+        <!-- Academic Key Stats -->
+        <div class="dash-stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Cumulative GPA</div>
+            <div class="stat-value" id="dashGpa" style="color: #38bdf8;">3.92</div>
+            <div class="stat-badge">Top 5% in Department</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Semester Attendance</div>
+            <div class="stat-value" id="dashAttendance" style="color: #34d399;">94.2%</div>
+            <div class="stat-badge">Good Standing</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Registered Credits</div>
+            <div class="stat-value" style="color: #a78bfa;">22 Credits</div>
+            <div class="stat-badge" style="color: var(--text-muted);">Spring 2026</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Authentication Mode</div>
+            <div class="stat-value" style="font-size: 1.15rem; color: #f59e0b;" id="dashAuthMethod">MiniMoth OTP</div>
+            <div class="stat-badge" style="color: #34d399;">Active Session</div>
+          </div>
+        </div>
+
+        <!-- Courses & Campus Feed Grid -->
+        <div class="dash-content-grid">
+          
+          <!-- Enrolled Courses -->
+          <div class="glass-card" style="padding: 26px;">
+            <div class="card-heading" style="margin-bottom: 16px;">
+              <h3 style="font-size: 1.2rem; font-weight: 700;">Enrolled Courses & Academic Standing</h3>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">Current semester enrolled modules and assessment grades.</p>
+            </div>
+            <div class="table-responsive">
+              <table class="portal-table">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Course Name</th>
+                    <th>Attendance</th>
+                    <th>Grade</th>
+                  </tr>
+                </thead>
+                <tbody id="courseTableBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Campus Notifications -->
+          <div class="glass-card" style="padding: 26px;">
+            <div class="card-heading" style="margin-bottom: 16px;">
+              <h3 style="font-size: 1.2rem; font-weight: 700;">Campus Notices</h3>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">Latest academic notifications</p>
+            </div>
+            <div id="announcementsList">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="portal-footer">
+    CampusNet Student Information System • Powered by MiniMoth OTP Gateway API • Safe & Encrypted
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
