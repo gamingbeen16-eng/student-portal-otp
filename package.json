@@ -1,0 +1,13 @@
+{
+  "name": "student-portal-otp",
+  "version": "1.0.0",
+  "description": "Student Portal with Live MiniMoth OTP Generator & Verification System",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
+  }
+}
